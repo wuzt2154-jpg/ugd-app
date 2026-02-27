@@ -6,135 +6,143 @@
 <title>优供达</title>
 
 <style>
-body{
-  margin:0;
-  font-family:-apple-system,BlinkMacSystemFont;
-  background:#f2f2f2;
-}
-.header{
-  background:#07C160;
-  color:#fff;
-  text-align:center;
-  padding:16px;
-  font-size:18px;
-}
-.container{padding:12px;}
-.card{
-  background:#fff;
-  padding:12px;
-  border-radius:12px;
-  margin-bottom:12px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.05);
-}
-input,button{
-  padding:8px;
-  border-radius:8px;
-  border:1px solid #ddd;
-  margin:4px 0;
-  font-size:14px;
-}
-button{
-  background:#07C160;
-  color:#fff;
-  border:none;
-}
+body{margin:0;font-family:-apple-system;background:#f2f2f2;}
+.header{background:#07C160;color:#fff;text-align:center;padding:14px;font-size:18px;}
+.container{padding:12px;padding-bottom:80px;}
+.card{background:#fff;padding:12px;border-radius:12px;margin-bottom:12px;}
+input,button{padding:8px;border-radius:8px;border:1px solid #ddd;margin:4px 0;font-size:14px;}
+button{background:#07C160;color:#fff;border:none;}
 button.danger{background:#ff3b30;}
+.nav{
+position:fixed;bottom:0;left:0;right:0;
+background:#fff;border-top:1px solid #ddd;
+display:flex;justify-content:space-around;padding:8px 0;
+}
+.nav button{
+background:none;color:#333;font-size:14px;
+}
+.nav button.active{color:#07C160;font-weight:bold;}
 .vip{color:#ff9900;font-size:12px;}
 .ad{color:red;font-size:12px;}
 .small{font-size:12px;color:#666;}
+.hidden{display:none;}
 </style>
 </head>
 
 <body>
 
-<div class="header">优供达 · 在线测试版</div>
+<div class="header">优供达</div>
 
 <div class="container">
 
+<!-- 首页 -->
+<div id="homePage">
+<div id="list"></div>
+</div>
+
+<!-- 发布页 -->
+<div id="publishPage" class="hidden">
 <div class="card">
 <h3>发布商品</h3>
 <input id="name" placeholder="商品名称"><br>
 <input id="price" type="number" placeholder="价格"><br>
 <label><input type="checkbox" id="viponly"> 仅VIP可见</label><br>
-<button onclick="publish()">发布商品</button>
+<button onclick="publish()">发布</button>
+</div>
 </div>
 
+<!-- 推广页 -->
+<div id="adPage" class="hidden">
 <div class="card">
-<h3>筛选商品</h3>
-<input id="min" type="number" placeholder="最低价">
-<input id="max" type="number" placeholder="最高价">
-<button onclick="filter()">筛选</button>
-<button onclick="reset()">重置</button>
+<h3>推广商品</h3>
+<p class="small">推广后会排在最前面（模拟）</p>
+<div id="adList"></div>
+</div>
 </div>
 
+<!-- 我的 -->
+<div id="mePage" class="hidden">
 <div class="card">
-<h3>账号状态</h3>
-<span id="vipstatus">普通用户</span><br>
+<h3>个人中心</h3>
+<p id="vipstatus">普通用户</p>
 <button onclick="openVIP()">开通VIP（模拟）</button>
 <button class="danger" onclick="clearData()">清空数据</button>
 </div>
 
-<div id="list"></div>
+<div class="card">
+<h3>关于我们</h3>
+<p class="small">
+优供达是一个本地商品信息展示平台。<br>
+本版本为在线测试版本。
+</p>
+</div>
+</div>
 
 </div>
 
+<!-- 底部导航 -->
+<div class="nav">
+<button id="navHome" class="active" onclick="switchPage('home')">首页</button>
+<button onclick="switchPage('publish')">发布</button>
+<button onclick="switchPage('ad')">推广</button>
+<button onclick="switchPage('me')">我的</button>
+</div>
+
 <script>
+
 let products = JSON.parse(localStorage.getItem("ugd_data")) || [
 { id:1, name:"柠檬果汁", price:10, vip:false, ad:false },
 { id:2, name:"精品礼盒", price:199, vip:true, ad:false }
 ];
 
-let isVIP = false;
+let isVIP=false;
 
 function save(){
 localStorage.setItem("ugd_data",JSON.stringify(products));
-render(products);
+render();
 }
 
-function render(data){
+function render(){
 let html="";
-data.sort((a,b)=>b.ad-a.ad||a.price-b.price);
-data.forEach(p=>{
-if(p.vip && !isVIP) return;
+products.sort((a,b)=>b.ad-a.ad||a.price-b.price);
+products.forEach(p=>{
+if(p.vip&&!isVIP) return;
 html+=`<div class="card">
 <b>${p.name}</b> ¥${p.price}
 ${p.vip?'<span class="vip"> VIP专属</span>':''}
-${p.ad?'<span class="ad"> 付费推广</span>':''}
-<br><span class="small">ID:${p.id}</span><br>
+${p.ad?'<span class="ad">  推广</span>':''}
+<br>
 <button onclick="contact(${p.id})">联系</button>
-<button onclick="promote(${p.id})">推广</button>
-<button class="danger" onclick="removeItem(${p.id})">删除</button>
+<button onclick="removeItem(${p.id})" class="danger">删除</button>
 </div>`;
 });
 document.getElementById("list").innerHTML=html;
+
+let adHtml="";
+products.forEach(p=>{
+adHtml+=`<div class="card">
+${p.name} ¥${p.price}
+<button onclick="promote(${p.id})">设为推广</button>
+</div>`;
+});
+document.getElementById("adList").innerHTML=adHtml;
 }
 
 function publish(){
 let name=document.getElementById("name").value.trim();
 let price=parseFloat(document.getElementById("price").value);
 let vip=document.getElementById("viponly").checked;
-if(!name || !price){alert("请填写完整信息");return;}
+if(!name||!price){alert("请填写完整");return;}
 products.push({id:Date.now(),name,price,vip,ad:false});
 save();
 alert("发布成功");
-}
-
-function filter(){
-let min=parseFloat(document.getElementById("min").value)||0;
-let max=parseFloat(document.getElementById("max").value)||999999999;
-let data=products.filter(p=>p.price>=min&&p.price<=max);
-render(data);
-}
-
-function reset(){
-render(products);
 }
 
 function promote(id){
 let p=products.find(x=>x.id===id);
 p.ad=true;
 save();
-alert("已设置为推广（模拟）");
+alert("已推广（模拟）");
 }
 
 function contact(id){
@@ -151,8 +159,8 @@ alert("已删除");
 function openVIP(){
 isVIP=true;
 document.getElementById("vipstatus").innerText="VIP会员";
-render(products);
-alert("VIP开通成功（模拟）");
+render();
+alert("VIP已开通（模拟）");
 }
 
 function clearData(){
@@ -160,7 +168,31 @@ localStorage.removeItem("ugd_data");
 location.reload();
 }
 
-render(products);
+function switchPage(page){
+document.getElementById("homePage").classList.add("hidden");
+document.getElementById("publishPage").classList.add("hidden");
+document.getElementById("adPage").classList.add("hidden");
+document.getElementById("mePage").classList.add("hidden");
+
+document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
+
+if(page==="home"){
+document.getElementById("homePage").classList.remove("hidden");
+document.getElementById("navHome").classList.add("active");
+}
+if(page==="publish"){
+document.getElementById("publishPage").classList.remove("hidden");
+}
+if(page==="ad"){
+document.getElementById("adPage").classList.remove("hidden");
+}
+if(page==="me"){
+document.getElementById("mePage").classList.remove("hidden");
+}
+}
+
+render();
+
 </script>
 
 </body>
