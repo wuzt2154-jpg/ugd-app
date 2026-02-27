@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>优供达</title>
+
+<style>
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont;
+  background:#f2f2f2;
+}
+.header{
+  background:#07C160;
+  color:#fff;
+  text-align:center;
+  padding:16px;
+  font-size:18px;
+}
+.container{padding:12px;}
+.card{
+  background:#fff;
+  padding:12px;
+  border-radius:12px;
+  margin-bottom:12px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.05);
+}
+input,button{
+  padding:8px;
+  border-radius:8px;
+  border:1px solid #ddd;
+  margin:4px 0;
+  font-size:14px;
+}
+button{
+  background:#07C160;
+  color:#fff;
+  border:none;
+}
+button.danger{background:#ff3b30;}
+.vip{color:#ff9900;font-size:12px;}
+.ad{color:red;font-size:12px;}
+.small{font-size:12px;color:#666;}
+</style>
+</head>
+
+<body>
+
+<div class="header">优供达 · 在线测试版</div>
+
+<div class="container">
+
+<div class="card">
+<h3>发布商品</h3>
+<input id="name" placeholder="商品名称"><br>
+<input id="price" type="number" placeholder="价格"><br>
+<label><input type="checkbox" id="viponly"> 仅VIP可见</label><br>
+<button onclick="publish()">发布商品</button>
+</div>
+
+<div class="card">
+<h3>筛选商品</h3>
+<input id="min" type="number" placeholder="最低价">
+<input id="max" type="number" placeholder="最高价">
+<button onclick="filter()">筛选</button>
+<button onclick="reset()">重置</button>
+</div>
+
+<div class="card">
+<h3>账号状态</h3>
+<span id="vipstatus">普通用户</span><br>
+<button onclick="openVIP()">开通VIP（模拟）</button>
+<button class="danger" onclick="clearData()">清空数据</button>
+</div>
+
+<div id="list"></div>
+
+</div>
+
+<script>
+let products = JSON.parse(localStorage.getItem("ugd_data")) || [
+{ id:1, name:"柠檬果汁", price:10, vip:false, ad:false },
+{ id:2, name:"精品礼盒", price:199, vip:true, ad:false }
+];
+
+let isVIP = false;
+
+function save(){
+localStorage.setItem("ugd_data",JSON.stringify(products));
+render(products);
+}
+
+function render(data){
+let html="";
+data.sort((a,b)=>b.ad-a.ad||a.price-b.price);
+data.forEach(p=>{
+if(p.vip && !isVIP) return;
+html+=`<div class="card">
+<b>${p.name}</b> ¥${p.price}
+${p.vip?'<span class="vip"> VIP专属</span>':''}
+${p.ad?'<span class="ad"> 付费推广</span>':''}
+<br><span class="small">ID:${p.id}</span><br>
+<button onclick="contact(${p.id})">联系</button>
+<button onclick="promote(${p.id})">推广</button>
+<button class="danger" onclick="removeItem(${p.id})">删除</button>
+</div>`;
+});
+document.getElementById("list").innerHTML=html;
+}
+
+function publish(){
+let name=document.getElementById("name").value.trim();
+let price=parseFloat(document.getElementById("price").value);
+let vip=document.getElementById("viponly").checked;
+if(!name || !price){alert("请填写完整信息");return;}
+products.push({id:Date.now(),name,price,vip,ad:false});
+save();
+alert("发布成功");
+}
+
+function filter(){
+let min=parseFloat(document.getElementById("min").value)||0;
+let max=parseFloat(document.getElementById("max").value)||999999999;
+let data=products.filter(p=>p.price>=min&&p.price<=max);
+render(data);
+}
+
+function reset(){
+render(products);
+}
+
+function promote(id){
+let p=products.find(x=>x.id===id);
+p.ad=true;
+save();
+alert("已设置为推广（模拟）");
+}
+
+function contact(id){
+let p=products.find(x=>x.id===id);
+alert("联系电话：13800008888\n商品："+p.name);
+}
+
+function removeItem(id){
+products=products.filter(p=>p.id!==id);
+save();
+alert("已删除");
+}
+
+function openVIP(){
+isVIP=true;
+document.getElementById("vipstatus").innerText="VIP会员";
+render(products);
+alert("VIP开通成功（模拟）");
+}
+
+function clearData(){
+localStorage.removeItem("ugd_data");
+location.reload();
+}
+
+render(products);
+</script>
+
+</body>
+</html>
